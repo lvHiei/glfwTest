@@ -5,14 +5,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/glad.c \
+../src/myPng.c \
 ../src/offscreen.c 
 
 OBJS += \
 ./src/glad.o \
+./src/myPng.o \
 ./src/offscreen.o 
 
 C_DEPS += \
 ./src/glad.d \
+./src/myPng.d \
 ./src/offscreen.d 
 
 
