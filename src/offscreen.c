@@ -49,10 +49,15 @@ float f_pos1[] = {
 };
 
 float f_pos2[] = {
-        -0.5f, 0.5f,
-        -0.5f, -0.5f,
-		0.5f, -0.5f,
-		0.5f, 0.5f,
+//        -0.5f, 0.5f,
+//        -0.5f, -0.5f,
+//		0.5f, -0.5f,
+//		0.5f, 0.5f,
+
+        -0.8f, 0.8f,
+        -0.8f, -0.8f,
+        0.8f, -0.8f,
+        0.8f, 0.8f,
 };
 
 float f_tex1[] = {
@@ -75,35 +80,15 @@ static const char* vertex_shader_text =
 	"attribute vec2 a_TextureCoordinates;     \n"
 	"attribute vec2 a_TextureCoordinates2;     \n"
 	"uniform  mat4 u_Matrix;     \n"
-	"uniform  vec2 u_Vertex1;     \n"
-	"uniform  vec2 u_Vertex2;     \n"
-	"uniform  vec2 u_Vertex3;     \n"
-	"uniform  vec2 u_Vertex4;     \n"
 	"uniform  float u_type;     \n"
 	"\n"
 	"varying vec2 v_TextureCoordinates;     \n"
-	"varying float type;     \n"
+	"varying float v_type;     \n"
 	"          \n"
-	""
-	"int isTexture2()\n"
-	"{\n"
-	"    vec4 vertex1 = u_Matrix * vec4(u_Vertex1, 0.0, 1.0);  \n"
-	"    vec4 vertex2 = u_Matrix * vec4(u_Vertex2, 0.0, 1.0);  \n"
-	"    vec4 vertex3 = u_Matrix * vec4(u_Vertex3, 0.0, 1.0);  \n"
-	"    vec4 vertex4 = u_Matrix * vec4(u_Vertex4, 0.0, 1.0);  \n"
-	"	 vec4 pos = u_Matrix * a_Position1;\n"
-	"	 if(u_type == 2.0)\n"
-	"	 {\n"
-	"		 type = 2.0;\n"
-	"		 return 1;\n"
-	"	 }\n"
-	"	 type = 1.0;\n"
-	"	 return 0;\n"
-	"}\n"
 	"\n"
 	"void main()                      \n"
 	"{                                \n"
-	"	 if(isTexture2() == 1)\n"
+	"	 if(u_type == 2.0)\n"
 	"	 {\n"
 	"	 	v_TextureCoordinates = a_TextureCoordinates2;\n"
 	"	 	gl_Position = u_Matrix * a_Position2;\n"
@@ -114,8 +99,7 @@ static const char* vertex_shader_text =
 	"	  	gl_Position = a_Position1;\n"
 	"	 }\n"
 	"	 \n"
-//	"    v_TextureCoordinates = a_TextureCoordinates;  \n"
-//	"    gl_Position = u_Matrix * a_Position;  \n"
+	"	 v_type = u_type;\n"
 	"}";
 
 static const char* fragment_shader_text =
@@ -124,11 +108,11 @@ static const char* fragment_shader_text =
         "uniform sampler2D  u_TextureUnit;                                 \n"
         "uniform sampler2D  u_TextureUnit2;                                 \n"
         "varying vec2 v_TextureCoordinates;                                 \n"
-		"varying float type;     \n"
+		"varying float v_type;     \n"
 		"    \n"
         "void main()                           \n"
         "{                                 \n"
-        "    if(type == 1.0){"
+        "    if(v_type == 1.0){"
 		"		 gl_FragColor = texture2D(u_TextureUnit, v_TextureCoordinates);"
         "	 }else{"
 		"		 gl_FragColor = texture2D(u_TextureUnit2, v_TextureCoordinates);    "
@@ -142,7 +126,7 @@ static void error_callback(int error, const char* description)
     fprintf(stderr, "Error: %s\n", description);
 }
 
-int main(void)
+int main()
 {
     GLFWwindow* window;
     GLuint vertex_shader, fragment_shader, program;
@@ -150,7 +134,6 @@ int main(void)
     GLuint texture[2];
     GLint tex1_location, tex2_location;
     GLint type_location;
-    GLint vertex1_location, vertex2_location, vertex3_location, vertex4_location;
     float ratio;
     int width, height;
     mat4x4 m, p, mvp;
@@ -166,7 +149,8 @@ int main(void)
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-//    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_SAMPLES, 8);
 
     window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
     if (!window)
@@ -226,10 +210,6 @@ int main(void)
     vtex2_location = glGetAttribLocation(program, "a_TextureCoordinates2");
     tex1_location = glGetUniformLocation(program, "u_TextureUnit");
     tex2_location = glGetUniformLocation(program, "u_TextureUnit2");
-    vertex1_location = glGetUniformLocation(program, "u_Vertex1");
-    vertex2_location = glGetUniformLocation(program, "u_Vertex2");
-    vertex3_location = glGetUniformLocation(program, "u_Vertex3");
-    vertex4_location = glGetUniformLocation(program, "u_Vertex4");
     type_location = glGetUniformLocation(program, "u_type");
 
     glEnableVertexAttribArray(vpos_location);
@@ -248,17 +228,12 @@ int main(void)
     glVertexAttribPointer(vtex2_location, 2, GL_FLOAT, GL_FALSE,
                           0, f_tex2);
 
-    i = 0;
-    glUniform2f(vertex1_location, f_pos2[i++], f_pos2[i++]);
-    glUniform2f(vertex2_location, f_pos2[i++], f_pos2[i++]);
-    glUniform2f(vertex3_location, f_pos2[i++], f_pos2[i++]);
-    glUniform2f(vertex4_location, f_pos2[i++], f_pos2[i++]);
-
     PNGHandle* handles[2];
     PNGHandle* handle = mallocPngHandle();
     PNGHandle* handle1 = mallocPngHandle();
     decodePng("mu.png", handle);
-    decodePng("hiei2.png", handle1);
+//    decodePng("hiei2.png", handle1);
+    decodePng("11.png", handle1);
 
     handles[0] = handle;
     handles[1] = handle1;
@@ -285,7 +260,7 @@ int main(void)
     glClear(GL_COLOR_BUFFER_BIT);
 
     mat4x4_identity(m);
-    mat4x4_rotate_Z(m, m, 1*M_PI/4);
+    mat4x4_rotate_Z(m, m, 1*M_PI/90);
     mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
     mat4x4_mul(mvp, p, m);
 
@@ -304,37 +279,40 @@ int main(void)
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-    while (!glfwWindowShouldClose(window))
-    {
-        glfwGetFramebufferSize(window, &width, &height);
-        ratio = width / (float) height;
-
-        glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        mat4x4_identity(m);
-        mat4x4_rotate_Z(m, m, 1*M_PI/4);
-        mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-        mat4x4_mul(mvp, p, m);
-
-        glUseProgram(program);
-        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
-        glActiveTexture(GL_TEXTURE0);
-    	glBindTexture(GL_TEXTURE_2D, texture[0]);
-        glUniform1i(tex1_location, 0);
-        glUniform1f(type_location, 1.0f);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    	glActiveTexture(GL_TEXTURE1);
-    	glBindTexture(GL_TEXTURE_2D, texture[1]);
-        glUniform1i(tex2_location, 1);
-        glUniform1f(type_location, 2.0f);
-
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+    i = 0;
+//    while (!glfwWindowShouldClose(window))
+//    {
+//        glfwGetFramebufferSize(window, &width, &height);
+//        ratio = width / (float) height;
+//
+//        glViewport(0, 0, width, height);
+//        glClear(GL_COLOR_BUFFER_BIT);
+//        glEnable(GL_MULTISAMPLE);
+//
+//        mat4x4_identity(m);
+//        mat4x4_rotate_Z(m, m, i++*M_PI/1080);
+//        mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+//        mat4x4_mul(mvp, p, m);
+//
+//        glUseProgram(program);
+//        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
+//        glActiveTexture(GL_TEXTURE0);
+//    	glBindTexture(GL_TEXTURE_2D, texture[0]);
+//        glUniform1i(tex1_location, 0);
+//        glUniform1f(type_location, 1.0f);
+//        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+//
+//    	glActiveTexture(GL_TEXTURE1);
+//    	glBindTexture(GL_TEXTURE_2D, texture[1]);
+//        glUniform1i(tex2_location, 1);
+//        glUniform1f(type_location, 2.0f);
+//
+//        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+//        glDisable(GL_MULTISAMPLE);
+//
+//        glfwSwapBuffers(window);
+//        glfwPollEvents();
+//    }
 
 
 #if USE_NATIVE_OSMESA
